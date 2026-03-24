@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPARK – AI Sign Language Translator</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/spark-favicon.png') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════
+       DESIGN SYSTEM — SPARK
+       Dark tech · Electric blue · Glassmorphism
+    ═══════════════════════════════════════════ */
+    :root {
+      --bg:       #070b12;
+      --surface:  #0d1421;
+      --glass:    rgba(255,255,255,0.04);
+      --glass-b:  rgba(255,255,255,0.08);
+      --blue:     #3b82f6;
+      --blue-g:   #60a5fa;
+      --cyan:     #22d3ee;
+      --accent:   #a78bfa;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --border:   rgba(255,255,255,0.07);
+      --radius:   16px;
+      --font-d:   'Syne', sans-serif;
+      --font-b:   'DM Sans', sans-serif;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-b);
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: default;
+    }
+
+    /* ── Noise overlay ── */
+    body::before {
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+
+    /* ── Gradient orbs ── */
+    .orb { position:fixed; border-radius:50%; pointer-events:none; z-index:0; filter:blur(120px); }
+    .orb-1 { width:600px; height:600px; background:radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%); top:-200px; left:-100px; }
+    .orb-2 { width:500px; height:500px; background:radial-gradient(circle, rgba(167,139,250,0.12), transparent 70%); bottom:-100px; right:-100px; }
+    .orb-3 { width:400px; height:400px; background:radial-gradient(circle, rgba(34,211,238,0.08), transparent 70%); top:40%; left:50%; transform:translateX(-50%); }
+
+    /* ═══════════ NAVBAR ═══════════ */
+    .navbar {
+      position: fixed; top:0; left:0; right:0; z-index:100;
+      padding: 0 40px;
+      display: flex; align-items:center; justify-content:space-between;
+      height: 70px;
+      background: rgba(7,11,18,0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display:flex; align-items:center; gap:12px;
+      font-family: var(--font-d); font-size:20px; font-weight:800;
+      letter-spacing:-0.5px; color: var(--text);
+      text-decoration:none;
+    }
+    .nav-logo img { height:36px; }
+    .logo-dot { color: var(--cyan); }
+
+    .nav-links { list-style:none; display:flex; gap:6px; }
+    .nav-links a {
+      display:block; padding:7px 18px; border-radius:8px;
+      font-family: var(--font-d); font-size:13px; font-weight:600;
+      letter-spacing:0.5px; text-transform:uppercase;
+      color: var(--muted); text-decoration:none;
+      transition: color .2s, background .2s;
+    }
+    .nav-links a:hover { color:var(--text); background: var(--glass-b); }
+    .nav-links a.active { color: var(--blue-g); background: rgba(59,130,246,0.1); }
+
+    .nav-cta {
+      padding: 9px 22px; border-radius:10px;
+      background: var(--blue); color:#fff;
+      font-family: var(--font-d); font-size:13px; font-weight:700;
+      text-decoration:none; transition: background .2s, transform .15s;
+    }
+    .nav-cta:hover { background: var(--blue-g); transform:translateY(-1px); }
+
+    /* ═══════════ HERO ═══════════ */
+    .hero {
+      position:relative; z-index:1;
+      min-height: 100vh;
+      display:flex; align-items:center;
+      padding: 100px 80px 60px;
+    }
+    .hero-inner {
+      max-width:1200px; width:100%; margin:0 auto;
+      display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center;
+    }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 6px 14px; border-radius:20px;
+      background: rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.25);
+      font-size:12px; font-weight:500; color: var(--blue-g);
+      letter-spacing:0.5px; margin-bottom:24px;
+    }
+    .badge-dot { width:6px; height:6px; border-radius:50%; background: var(--cyan); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:0.5; transform:scale(0.8)} }
+
+    .hero-title {
+      font-family: var(--font-d); font-size:clamp(44px,5vw,72px);
+      font-weight:800; line-height:1.05; letter-spacing:-2px;
+      margin-bottom:24px;
+    }
+    .title-line { display:block; }
+    .title-glow {
+      background: linear-gradient(135deg, var(--blue-g) 0%, var(--cyan) 50%, var(--accent) 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+
+    .hero-desc {
+      font-size:18px; line-height:1.7; color: var(--muted);
+      max-width:480px; margin-bottom:40px; font-weight:400;
+    }
+
+    .hero-actions { display:flex; gap:14px; flex-wrap:wrap; }
+    .btn-primary {
+      display:inline-flex; align-items:center; gap:10px;
+      padding:14px 32px; border-radius:12px;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      color:#fff; font-family:var(--font-d); font-size:15px; font-weight:700;
+      text-decoration:none; border:none; cursor:pointer;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 0 30px rgba(59,130,246,0.35);
+    }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 0 40px rgba(59,130,246,0.5); }
+
+    .btn-outline {
+      display:inline-flex; align-items:center; gap:10px;
+      padding:14px 32px; border-radius:12px;
+      background: var(--glass); border:1px solid var(--border);
+      color: var(--text); font-family:var(--font-d); font-size:15px; font-weight:600;
+      text-decoration:none; cursor:pointer;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .btn-outline:hover { background: var(--glass-b); border-color: rgba(255,255,255,0.15); transform:translateY(-2px); }
+
+    /* ── Hero visual ── */
+    .hero-visual {
+      position:relative; display:flex; align-items:center; justify-content:center;
+    }
+    .hero-card {
+      position:relative; width:100%; max-width:460px;
+      background: var(--glass); border:1px solid var(--border);
+      border-radius:24px; padding:32px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px var(--border);
+    }
+    .hero-card::before {
+      content:''; position:absolute; inset:-1px; border-radius:24px; z-index:-1;
+      background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(167,139,250,0.1), transparent);
+      pointer-events:none;
+    }
+    .card-header {
+      display:flex; align-items:center; gap:10px;
+      margin-bottom:20px; padding-bottom:16px;
+      border-bottom:1px solid var(--border);
+    }
+    .card-dots { display:flex; gap:6px; }
+    .card-dot { width:10px; height:10px; border-radius:50%; }
+    .card-dot:nth-child(1){background:#ff5f57;} .card-dot:nth-child(2){background:#febc2e;} .card-dot:nth-child(3){background:#28c840;}
+    .card-title { font-family:var(--font-d); font-size:13px; font-weight:600; color:var(--muted); margin-left:auto; }
+
+    .detection-preview {
+      background: rgba(0,0,0,0.3); border-radius:16px; overflow:hidden;
+      height:200px; display:flex; align-items:center; justify-content:center;
+      border:1px solid var(--border); position:relative; margin-bottom:20px;
+    }
+    .cam-icon { font-size:48px; opacity:0.4; }
+    .scan-line {
+      position:absolute; left:0; right:0; height:2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      animation: scan 3s ease-in-out infinite;
+    }
+    @keyframes scan { 0%{top:0;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:100%;opacity:0} }
+
+    .live-badge {
+      position:absolute; top:12px; left:12px;
+      background: rgba(239,68,68,0.9); color:#fff;
+      font-size:11px; font-weight:700; padding:4px 10px; border-radius:6px;
+      display:flex; align-items:center; gap:5px; letter-spacing:0.5px;
+    }
+    .live-dot { width:6px; height:6px; border-radius:50%; background:#fff; animation:pulse 1s infinite; }
+
+    .gesture-row {
+      display:flex; justify-content:space-between; align-items:center;
+      background: rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2);
+      border-radius:12px; padding:14px 18px;
+    }
+    .gesture-label { font-size:12px; color:var(--muted); font-weight:500; }
+    .gesture-word { font-family:var(--font-d); font-size:20px; font-weight:800; color:var(--blue-g); }
+    .confidence-bar-wrap { width:80px; }
+    .confidence-label { font-size:10px; color:var(--muted); margin-bottom:4px; text-align:right; }
+    .confidence-bar { height:4px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; }
+    .confidence-fill { height:100%; width:94%; background:linear-gradient(90deg,var(--blue),var(--cyan)); border-radius:4px; animation: grow 1.5s ease forwards; }
+    @keyframes grow { from{width:0} to{width:94%} }
+
+    /* ═══════════ STATS ═══════════ */
+    .stats-section {
+      position:relative; z-index:1;
+      padding:20px 80px 80px;
+    }
+    .stats-row {
+      max-width:1200px; margin:0 auto;
+      display:grid; grid-template-columns:repeat(4,1fr); gap:24px;
+    }
+    .stat-card {
+      background: var(--glass); border:1px solid var(--border);
+      border-radius:var(--radius); padding:28px 24px;
+      backdrop-filter:blur(10px); text-align:center;
+      transition: border-color .2s, transform .2s;
+    }
+    .stat-card:hover { border-color: rgba(59,130,246,0.3); transform:translateY(-2px); }
+    .stat-number { font-family:var(--font-d); font-size:36px; font-weight:800; color:var(--blue-g); }
+    .stat-label { font-size:13px; color:var(--muted); margin-top:4px; font-weight:400; }
+
+    /* ═══════════ FEATURES ═══════════ */
+    .features-section {
+      position:relative; z-index:1;
+      padding:80px;
+    }
+    .section-label {
+      font-family:var(--font-d); font-size:11px; font-weight:700; letter-spacing:2px;
+      text-transform:uppercase; color:var(--blue-g); margin-bottom:14px;
+    }
+    .section-title {
+      font-family:var(--font-d); font-size:clamp(32px,3.5vw,48px);
+      font-weight:800; letter-spacing:-1.5px; line-height:1.1;
+      margin-bottom:16px;
+    }
+    .section-sub { font-size:17px; color:var(--muted); max-width:520px; line-height:1.6; margin-bottom:60px; }
+
+    .features-grid {
+      max-width:1200px; margin:0 auto;
+      display:grid; grid-template-columns:repeat(2,1fr); gap:24px;
+    }
+    .feature-card {
+      background: var(--glass); border:1px solid var(--border);
+      border-radius:var(--radius); padding:36px;
+      backdrop-filter:blur(10px); position:relative; overflow:hidden;
+      transition: border-color .25s, transform .25s;
+    }
+    .feature-card:hover { border-color: rgba(59,130,246,0.3); transform:translateY(-3px); }
+    .feature-card.wide { grid-column:1/3; display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; }
+    .feature-card::after {
+      content:''; position:absolute; top:0; left:0; right:0; height:1px;
+      background:linear-gradient(90deg, transparent, rgba(59,130,246,0.5), transparent);
+    }
+    .feature-icon {
+      width:52px; height:52px; border-radius:14px;
+      background: rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.2);
+      display:flex; align-items:center; justify-content:center;
+      font-size:24px; margin-bottom:20px;
+    }
+    .feature-title { font-family:var(--font-d); font-size:20px; font-weight:700; margin-bottom:10px; }
+    .feature-desc { font-size:15px; color:var(--muted); line-height:1.65; }
+
+    /* ── Pipeline viz ── */
+    .pipeline {
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .pipe-step {
+      display:flex; align-items:center; gap:14px;
+      padding:12px 16px; border-radius:10px;
+      background:rgba(0,0,0,0.2); border:1px solid var(--border);
+      font-size:13px; font-weight:500;
+    }
+    .pipe-icon { font-size:18px; width:32px; text-align:center; }
+    .pipe-label { flex:1; }
+    .pipe-tag {
+      font-size:10px; padding:3px 8px; border-radius:6px;
+      background: rgba(59,130,246,0.15); color:var(--blue-g); font-weight:600;
+    }
+
+    /* ═══════════ CTA SECTION ═══════════ */
+    .cta-section {
+      position:relative; z-index:1; padding:60px 80px 100px;
+    }
+    .cta-card {
+      max-width:1200px; margin:0 auto;
+      background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(167,139,250,0.08));
+      border:1px solid rgba(59,130,246,0.25); border-radius:24px;
+      padding:70px; text-align:center;
+      position:relative; overflow:hidden;
+    }
+    .cta-card::before {
+      content:''; position:absolute; top:-50%; left:50%; transform:translateX(-50%);
+      width:600px; height:600px; border-radius:50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%);
+    }
+    .cta-title { font-family:var(--font-d); font-size:clamp(30px,4vw,52px); font-weight:800; letter-spacing:-1.5px; margin-bottom:16px; }
+    .cta-sub { font-size:18px; color:var(--muted); margin-bottom:40px; }
+
+    /* ═══════════ FOOTER ═══════════ */
+    footer {
+      position:relative; z-index:1;
+      border-top:1px solid var(--border);
+      padding:40px 80px;
+      display:flex; align-items:center; justify-content:space-between;
+      background: rgba(0,0,0,0.2);
+    }
+    .footer-brand { display:flex; align-items:center; gap:12px; }
+    .footer-brand img { height:30px; opacity:0.7; }
+    .footer-brand span { font-family:var(--font-d); font-weight:800; font-size:16px; color:var(--muted); }
+    .footer-copy { font-size:13px; color:var(--muted); }
+    .footer-links { display:flex; gap:24px; }
+    .footer-links a { font-size:13px; color:var(--muted); text-decoration:none; transition:color .2s; }
+    .footer-links a:hover { color:var(--text); }
+
+    /* ── Scroll animations ── */
+    [data-reveal] { opacity:0; transform:translateY(30px); transition: opacity .7s ease, transform .7s ease; }
+    [data-reveal].visible { opacity:1; transform:none; }
+    [data-delay="1"] { transition-delay:.1s; }
+    [data-delay="2"] { transition-delay:.2s; }
+    [data-delay="3"] { transition-delay:.3s; }
+    [data-delay="4"] { transition-delay:.4s; }
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a class="nav-logo" href="/">
+      <img src="{{ url_for('static', filename='images/spark-logo.png') }}" alt="SPARK">
+      SPARK<span class="logo-dot">.</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/" class="active">Home</a></li>
+      <li><a href="/translator">Translator</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+    <a href="/translator" class="nav-cta">Launch App →</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          AI-Powered · Real-Time · Multi-Language
+        </div>
+        <h1 class="hero-title">
+          <span class="title-line">Bridge the</span>
+          <span class="title-line title-glow">Communication</span>
+          <span class="title-line">Gap with AI</span>
+        </h1>
+        <p class="hero-desc">
+          SPARK translates sign language into text and speech in real time using
+          computer vision and deep learning — making communication effortless for everyone.
+        </p>
+        <div class="hero-actions">
+          <a href="/translator" class="btn-primary">🚀 Launch Translator</a>
+          <a href="/dictionary" class="btn-outline">📘 View Dictionary</a>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-card">
+          <div class="card-header">
+            <div class="card-dots">
+              <div class="card-dot"></div>
+              <div class="card-dot"></div>
+              <div class="card-dot"></div>
+            </div>
+            <span class="card-title">SPARK Detection</span>
+          </div>
+          <div class="detection-preview">
+            <span class="cam-icon">🖐</span>
+            <div class="scan-line"></div>
+            <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+          </div>
+          <div class="gesture-row">
+            <div>
+              <div class="gesture-label">Detected Sign</div>
+              <div class="gesture-word">HELLO</div>
+            </div>
+            <div class="confidence-bar-wrap">
+              <div class="confidence-label">94%</div>
+              <div class="confidence-bar"><div class="confidence-fill"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats-section">
+    <div class="stats-row" data-reveal>
+      <div class="stat-card" data-delay="1">
+        <div class="stat-number">126</div>
+        <div class="stat-label">Hand Landmarks Per Frame</div>
+      </div>
+      <div class="stat-card" data-delay="2">
+        <div class="stat-number">10+</div>
+        <div class="stat-label">Output Languages</div>
+      </div>
+      <div class="stat-card" data-delay="3">
+        <div class="stat-number">30ms</div>
+        <div class="stat-label">Average Inference Time</div>
+      </div>
+      <div class="stat-card" data-delay="4">
+        <div class="stat-number">2</div>
+        <div class="stat-label">Hands Tracked Simultaneously</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features-section">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div class="section-label" data-reveal>Capabilities</div>
+      <h2 class="section-title" data-reveal>Everything you need<br>to communicate freely</h2>
+      <p class="section-sub" data-reveal>
+        From live hand detection to multilingual speech output —
+        SPARK handles the full pipeline so you don't have to.
+      </p>
+    </div>
+
+    <div class="features-grid" style="max-width:1200px;margin:0 auto;">
+
+      <div class="feature-card wide" data-reveal>
+        <div>
+          <div class="feature-icon">🤖</div>
+          <h3 class="feature-title">Full AI Pipeline</h3>
+          <p class="feature-desc">
+            Every frame runs through MediaPipe hand tracking → landmark extraction →
+            TensorFlow gesture classification → language translation → speech output.
+            All in under 100ms.
+          </p>
+        </div>
+        <div class="pipeline">
+          <div class="pipe-step"><span class="pipe-icon">📷</span><span class="pipe-label">Webcam Frame Capture</span><span class="pipe-tag">~16ms</span></div>
+          <div class="pipe-step"><span class="pipe-icon">✋</span><span class="pipe-label">MediaPipe Landmark Detection</span><span class="pipe-tag">~20ms</span></div>
+          <div class="pipe-step"><span class="pipe-icon">🧠</span><span class="pipe-label">TensorFlow MLP Inference</span><span class="pipe-tag">~10ms</span></div>
+          <div class="pipe-step"><span class="pipe-icon">🌐</span><span class="pipe-label">Multi-Language Translation</span><span class="pipe-tag">~50ms</span></div>
+          <div class="pipe-step"><span class="pipe-icon">🔊</span><span class="pipe-label">Text-to-Speech Output</span><span class="pipe-tag">~30ms</span></div>
+        </div>
+      </div>
+
+      <div class="feature-card" data-reveal data-delay="1">
+        <div class="feature-icon">👁</div>
+        <h3 class="feature-title">Real-Time Detection</h3>
+        <p class="feature-desc">
+          Detects both hands simultaneously at 30fps. Landmark coordinates are
+          normalized and smoothed across frames, eliminating flicker.
+        </p>
+      </div>
+
+      <div class="feature-card" data-reveal data-delay="2">
+        <div class="feature-icon">🌏</div>
+        <h3 class="feature-title">10+ Languages</h3>
+        <p class="feature-desc">
+          Translate and speak recognized signs in English, Tamil, Hindi,
+          Telugu, Malayalam, Kannada, Marathi, Gujarati, Bengali and Punjabi.
+        </p>
+      </div>
+
+      <div class="feature-card" data-reveal data-delay="3">
+        <div class="feature-icon">🎤</div>
+        <h3 class="feature-title">Voice Output</h3>
+        <p class="feature-desc">
+          Google Text-to-Speech converts translated text into natural-sounding
+          audio instantly — no manual playback required.
+        </p>
+      </div>
+
+      <div class="feature-card" data-reveal data-delay="4">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title">Low Latency</h3>
+        <p class="feature-desc">
+          Optimized inference pipeline with frame buffering and confidence smoothing
+          ensures stable, reliable predictions even with hand movement.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-card" data-reveal>
+      <h2 class="cta-title">Ready to break barriers?</h2>
+      <p class="cta-sub">Start translating sign language in seconds. No setup required.</p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+        <a href="/translator" class="btn-primary">🚀 Open Translator</a>
+        <a href="/about" class="btn-outline">Learn How It Works</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">
+      <img src="{{ url_for('static', filename='images/spark-logo.png') }}" alt="SPARK">
+      <span>SPARK</span>
+    </div>
+    <div class="footer-copy">© 2026 SPARK Technologies. All rights reserved.</div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/translator">Translator</a>
+      <a href="/about">About</a>
+    </div>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

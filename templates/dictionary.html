@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Dictionary | SPARK</title>
+  <link rel="icon" type="image/png" href="/static/images/spark-favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#070b12;--glass:rgba(255,255,255,0.04);--glass-b:rgba(255,255,255,0.07);--blue:#3b82f6;--blue-g:#60a5fa;--cyan:#22d3ee;--accent:#a78bfa;--green:#34d399;--yellow:#fbbf24;--text:#e2e8f0;--muted:#64748b;--border:rgba(255,255,255,0.07);--radius:14px;--font-d:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-weight:300;min-height:100vh;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");opacity:0.4;}
+    .orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(120px);}
+    .orb-1{width:500px;height:500px;background:radial-gradient(circle,rgba(59,130,246,0.1),transparent 70%);top:-150px;left:-100px;}
+
+    /* TOPBAR */
+    .topbar{position:sticky;top:0;z-index:100;padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(7,11,18,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;}
+    .brand img{height:30px;}
+    .brand-name{font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--text);letter-spacing:-0.5px;}
+    .brand-name span{color:var(--cyan);}
+    .topbar-right{display:flex;align-items:center;gap:16px;}
+    .user-chip{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:var(--glass-b);border:1px solid var(--border);font-size:13px;font-weight:500;}
+    .user-chip .avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;}
+    .logout-btn{padding:6px 14px;border-radius:8px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);color:#f87171;font-size:13px;font-weight:600;text-decoration:none;font-family:var(--font-d);transition:background .2s;}
+    .logout-btn:hover{background:rgba(248,113,113,0.2);}
+
+    /* NAV PILLS */
+    .nav-pills{display:flex;gap:8px;padding:16px 40px;position:relative;z-index:1;}
+    .nav-pill{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:10px;background:var(--glass);border:1px solid var(--border);color:var(--muted);font-family:var(--font-d);font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;}
+    .nav-pill:hover{background:var(--glass-b);color:var(--text);}
+    .nav-pill.active{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.25);color:var(--blue-g);}
+
+    /* MAIN */
+    .main{position:relative;z-index:1;padding:0 40px 60px;}
+    .page-header{margin-bottom:28px;}
+    .page-header h1{font-family:var(--font-d);font-size:clamp(24px,3vw,36px);font-weight:800;letter-spacing:-1px;margin-bottom:6px;}
+    .page-header p{color:var(--muted);font-size:14px;}
+
+    /* SEARCH */
+    .search-wrap{position:relative;max-width:480px;margin-bottom:32px;}
+    .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:16px;opacity:0.4;pointer-events:none;}
+    #searchBox{width:100%;padding:13px 16px 13px 46px;border-radius:12px;background:rgba(0,0,0,0.35);border:1px solid var(--border);color:var(--text);font-family:var(--font-b);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;}
+    #searchBox:focus{border-color:rgba(59,130,246,0.4);box-shadow:0 0 0 3px rgba(59,130,246,0.06);}
+    #searchBox::placeholder{color:var(--muted);}
+
+    /* CATEGORY */
+    .category-block{margin-bottom:40px;}
+    .category-label{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);font-family:var(--font-d);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue-g);margin-bottom:18px;}
+    .cards-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
+
+    /* SIGN CARD */
+    .sign-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .25s,transform .25s;cursor:pointer;}
+    .sign-card:hover{border-color:rgba(59,130,246,0.3);transform:translateY(-3px);}
+    .sign-img-wrap{background:rgba(0,0,0,0.25);aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    .sign-img-wrap img{width:100%;height:100%;object-fit:cover;}
+    .sign-img-wrap .no-img{font-size:48px;opacity:0.3;}
+    .sign-info{padding:14px;}
+    .sign-word{font-family:var(--font-d);font-size:15px;font-weight:700;margin-bottom:4px;letter-spacing:-0.2px;}
+    .sign-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;}
+    .sign-badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;font-family:var(--font-d);letter-spacing:0.3px;}
+    .badge-easy{background:rgba(52,211,153,0.1);color:var(--green);}
+    .badge-medium{background:rgba(251,191,36,0.1);color:var(--yellow);}
+    .badge-hard{background:rgba(248,113,113,0.1);color:#f87171;}
+
+    /* EMPTY */
+    .empty-state{text-align:center;padding:80px 40px;color:var(--muted);}
+    .empty-state .empty-icon{font-size:48px;margin-bottom:16px;opacity:0.4;}
+    .empty-state p{font-size:15px;}
+
+    /* LOADING */
+    .loading{text-align:center;padding:60px;color:var(--muted);}
+    .spinner{width:36px;height:36px;border:3px solid rgba(59,130,246,0.15);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;justify-content:space-between;}
+    .footer-brand{display:flex;align-items:center;gap:10px;}
+    .footer-brand img{height:24px;opacity:0.6;}
+    .footer-brand span{font-family:var(--font-d);font-weight:800;font-size:14px;color:var(--muted);}
+    .footer-copy{font-size:12px;color:var(--muted);}
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <a class="brand" href="/">
+      <img src="/static/images/spark-logo.png" alt="SPARK">
+      <span class="brand-name">SPARK<span>.</span></span>
+    </a>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="avatar">{{ username[0]|upper if username else 'U' }}</div>
+        {{ username }}
+      </div>
+      <a href="/logout" class="logout-btn">Sign Out</a>
+    </div>
+  </div>
+
+  <!-- NAV PILLS -->
+  <div class="nav-pills">
+    <a href="/dictionary" class="nav-pill active">📘 Dictionary</a>
+    <a href="/learn" class="nav-pill">🎓 Learn</a>
+    <a href="/translator" class="nav-pill">⚡ Translator</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="page-header">
+      <h1>Sign Language Dictionary</h1>
+      <p>Browse all available signs, their descriptions and difficulty levels</p>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchBox" placeholder="Search for a sign…">
+    </div>
+
+    <div id="dictionaryContainer">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading dictionary…</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-brand">
+      <img src="/static/images/spark-logo.png" alt="SPARK">
+      <span>SPARK</span>
+    </div>
+    <div class="footer-copy">© 2026 SPARK Technologies</div>
+  </footer>
+
+  <script>
+    let allData = {};
+
+    fetch("/api/dictionary")
+      .then(res => res.json())
+      .then(data => { allData = data; renderDictionary(data); })
+      .catch(() => {
+        document.getElementById("dictionaryContainer").innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>Dictionary not available. Add signs.json to the dictionary folder.</p>
+          </div>`;
+      });
+
+    function renderDictionary(data) {
+      const container = document.getElementById("dictionaryContainer");
+      container.innerHTML = "";
+      let hasAny = false;
+
+      for (const category in data) {
+        const signs = data[category];
+        if (!signs || signs.length === 0) continue;
+        hasAny = true;
+
+        const block = document.createElement("div");
+        block.className = "category-block";
+        block.innerHTML = `<div class="category-label">${category.toUpperCase()}</div><div class="cards-row" id="cat-${CSS.escape(category)}"></div>`;
+        container.appendChild(block);
+
+        const grid = block.querySelector(`#cat-${CSS.escape(category)}`);
+        signs.forEach(sign => {
+          const diffClass = sign.difficulty === 'Easy' ? 'badge-easy' : sign.difficulty === 'Hard' ? 'badge-hard' : 'badge-medium';
+          const card = document.createElement("div");
+          card.className = "sign-card";
+          card.dataset.word = (sign.word || '').toLowerCase();
+          card.innerHTML = `
+            <div class="sign-img-wrap">
+              ${sign.file
+                ? `<img src="/static/signs/${sign.file}" alt="${sign.word}" loading="lazy">`
+                : `<span class="no-img">🤝</span>`}
+            </div>
+            <div class="sign-info">
+              <div class="sign-word">${sign.word}</div>
+              <div class="sign-desc">${sign.description || ''}</div>
+              <span class="sign-badge ${diffClass}">${sign.difficulty || 'Normal'}</span>
+            </div>`;
+          grid.appendChild(card);
+        });
+      }
+
+      if (!hasAny) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>No signs found in the dictionary.</p></div>`;
+      }
+    }
+
+    /* ── Search ── */
+    document.getElementById("searchBox").addEventListener("input", function() {
+      const q = this.value.trim().toLowerCase();
+      if (!q) { renderDictionary(allData); return; }
+
+      const filtered = {};
+      for (const cat in allData) {
+        const matches = allData[cat].filter(s => (s.word||'').toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q));
+        if (matches.length) filtered[cat] = matches;
+      }
+      renderDictionary(filtered);
+
+      if (Object.keys(filtered).length === 0) {
+        document.getElementById("dictionaryContainer").innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <p>No signs match "<strong>${q}</strong>"</p>
+          </div>`;
+      }
+    });
+  </script>
+</body>
+</html>

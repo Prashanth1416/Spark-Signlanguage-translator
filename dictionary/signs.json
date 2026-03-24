@@ -1,0 +1,34 @@
+{
+  "greetings": [
+    {
+      "word": "HELLO",
+      "file": "greetings/hello.gif",
+      "difficulty": "Easy",
+      "hands": "One hand",
+      "description": "A common greeting sign."
+    },
+    {
+      "word": "THANK YOU",
+      "file": "greetings/thank_you.gif",
+      "difficulty": "Easy",
+      "hands": "One hand",
+      "description": "Used to express gratitude."
+    }
+  ],
+  "common": [
+    {
+      "word": "YES",
+      "file": "common/yes.gif",
+      "difficulty": "Easy",
+      "hands": "One hand",
+      "description": "Affirmative response."
+    },
+    {
+      "word": "NO",
+      "file": "common/no.gif",
+      "difficulty": "Easy",
+      "hands": "One hand",
+      "description": "Negative response."
+    }
+  ]
+}

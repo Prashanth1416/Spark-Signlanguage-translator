@@ -1,0 +1,103 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc.*
+*.py,cover
+*.log
+
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# Flask / App
+# =========================
+instance/
+.webassets-cache
+*.db
+*.sqlite3
+
+# =========================
+# Jupyter Notebook
+# =========================
+.ipynb_checkpoints
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# =========================
+# Model & Large Files
+# =========================
+models/*.h5
+models/*.npy
+*.h5
+*.npy
+*.tflite
+
+# (Optional: if you want to include models, remove above lines)
+
+# =========================
+# Dataset Files
+# =========================
+*.csv
+data/
+datasets/
+
+# =========================
+# Build / Distribution
+# =========================
+build/
+dist/
+*.spec
+
+# =========================
+# Logs & Temp
+# =========================
+*.log
+temp/
+tmp/
+*.tmp
+
+# =========================
+# Media / Cache
+# =========================
+*.mp3
+*.wav
+*.mp4
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.*
+
+# =========================
+# Node (if frontend added)
+# =========================
+node_modules/
+package-lock.json
+
+# =========================
+# Misc
+# =========================
+*.bak
+*.swp

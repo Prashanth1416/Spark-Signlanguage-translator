@@ -1,0 +1,9 @@
+Flask
+Flask-CORS
+opencv-python
+mediapipe
+tensorflow
+numpy
+Pillow
+deep-translator
+google-translator
